@@ -53,6 +53,7 @@ def _fake_claude(tmp_path: Path) -> Path:
         import json, os, sys
         args = sys.argv[1:]
         open(os.path.join({str(tmp_path)!r}, "argv.json"), "w").write(json.dumps(args))
+        open(os.path.join({str(tmp_path)!r}, "path.txt"), "w").write(os.environ.get("PATH", ""))
         cwd = os.getcwd()
         def out(obj): print(json.dumps(obj), flush=True)
         out({{"type": "system", "subtype": "init", "model": args[args.index("--model") + 1],
@@ -119,6 +120,9 @@ def test_adapter_records_steps_checkpoints_and_pinned_flags(tmp_path):
         assert flag in argv
     assert argv[argv.index("--model") + 1] == "claude-haiku-4-5-20251001"
     assert "<HARNESS_CONTEXT>" in argv[argv.index("--append-system-prompt") + 1]
+    # The agent can run the tests: this interpreter (which has pytest) is first on PATH.
+    first = (tmp_path / "path.txt").read_text().split(os.pathsep)[0]
+    assert first == str(Path(sys.executable).parent)
 
 
 def test_fork_session_truncates_after_k_tool_results_and_rewrites_paths(tmp_path):

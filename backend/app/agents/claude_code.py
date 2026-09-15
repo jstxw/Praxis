@@ -69,8 +69,26 @@ CLAUDE_TOOL_MAP = {
 }
 DEFAULT_ALLOWED_TOOLS = (
     "Read", "Edit", "Write", "Glob", "Grep",
-    "Bash(pytest *)", "Bash(python -m pytest *)", "Bash(ls *)",
+    "Bash(pytest *)", "Bash(python -m pytest *)", "Bash(python3 -m pytest *)", "Bash(ls *)",
 )
+
+
+def agent_env() -> dict[str, str]:
+    """The agent's environment: this interpreter's bin dir first on PATH.
+
+    Found on the first live run: on a host with no ``python`` and no
+    approvable ``python3 -m pytest``, the agent could not run tests at
+    all — an environmental failure that would otherwise masquerade as an
+    "unverified submit" harness lesson. The interpreter running the
+    harness has pytest installed, so its ``python``/``pytest`` are what
+    the agent gets.
+    """
+    import sys
+
+    env = dict(os.environ)
+    bin_dir = str(Path(sys.executable).parent)
+    env["PATH"] = bin_dir + os.pathsep + env.get("PATH", "")
+    return env
 CONTINUE_PROMPT = "Continue the task from where you left off."
 _PYTEST_FAILED = re.compile(r"\b(\d+ failed|\d+ errors?|error collecting|ERROR )", re.IGNORECASE)
 
@@ -271,7 +289,7 @@ class ClaudeCodeAdapter:
             argv += ["--session-id", self._session_id, "-p", prompt]
         self._argv = argv
         self._proc = await asyncio.create_subprocess_exec(
-            *argv, cwd=self._cwd, stdin=asyncio.subprocess.DEVNULL,
+            *argv, cwd=self._cwd, env=agent_env(), stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
             limit=16 * 1024 * 1024,
         )

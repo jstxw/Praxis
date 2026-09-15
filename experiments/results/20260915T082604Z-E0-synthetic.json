@@ -1,0 +1,40 @@
+{
+  "agent": "synthetic",
+  "branch_statuses": [
+    "completed"
+  ],
+  "claim_type": "durability (deterministic; no statistics)",
+  "command": "harness experiment e0 --agent synthetic --workers 4",
+  "dst": {
+    "memory": {
+      "failures": [],
+      "seeds": 500
+    },
+    "sqlite": {
+      "failures": [],
+      "seeds": 500
+    }
+  },
+  "duplicate_records": 0,
+  "evaluations": 20,
+  "experiment": "E0",
+  "finished_at": "20260915T082604Z",
+  "isolation": [
+    "docker"
+  ],
+  "iteration_records": 20,
+  "killed_branch": "hx-e0-e0ced45c:0",
+  "killed_branch_final_fence": 2,
+  "label": "SYNTHETIC AGENT \u2014 pipeline validation only. The synthetic agent is an oracle simulator with assumed habits and assumed harness compliance; these numbers are NOT measurements of harness refinement on a real agent.",
+  "model_version": "synthetic-oracle-v1",
+  "outcomes": {
+    "failure": 9,
+    "infra_error": 0,
+    "success": 11,
+    "timeout": 0
+  },
+  "passed": true,
+  "preregistration": "experiments/preregistered/20260915T082259Z-E0.json",
+  "specs": 20,
+  "wall_time_s": 13.6
+}
