@@ -3,8 +3,8 @@
 > *A durable execution runtime for long-horizon agent workflows — checkpointed,
 > forkable, crash-recoverable — verified by deterministic simulation testing.*
 
-![tests](https://img.shields.io/badge/tests-128_passed_·_1_skipped-brightgreen)
-![DST](https://img.shields.io/badge/DST-10%2C000_seeds_·_0_failures-brightgreen)
+![tests](https://img.shields.io/badge/tests-244_passed_·_2_skipped-brightgreen)
+![DST](https://img.shields.io/badge/DST-10%2C000_seeds_×_2_backings_·_0_failures-brightgreen)
 ![invariants](https://img.shields.io/badge/invariants-I1–I7_verified-blue)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
@@ -23,6 +23,43 @@ The reference workload is a self-improving coding-agent harness search (after
 the Stanford Meta-Harness paper,
 [arXiv:2603.28052](https://arxiv.org/abs/2603.28052)). The workload has to
 *run*; it is not the claim.
+
+---
+
+## The refinement layer: `harness`
+
+On top of the runtime sits a coding-agent harness that improves through use
+([`documents/VISION.md`](documents/VISION.md)): it observes real work, detects
+recurring weaknesses **and the step where each one manifests**, proposes
+harness changes, evaluates them by **forking the trajectory at that step** on
+the durable runtime, and promotes only what clears a gate built on a measured
+noise floor.
+
+```bash
+sh scripts/install.sh              # the `harness` binary; local mode = SQLite, no server
+cd ~/my-repo && harness init       # empty harness H0, zero config
+harness wrap claude                # your normal Claude Code session, observed via hooks
+harness status                     # shows only deltas that cleared the gate
+```
+
+| | |
+|---|---|
+| a harness version **is** checkpoint state | every trajectory step records `(workspace snapshot, agent resume state, harness, memory version)` |
+| a candidate **is** a branch | each candidate run is a fenced `branch_runs` row; workers stage, the trusted plane scores |
+| a rollback **is** a fence increment | a reclaimed evaluation branch's late writes are rejected by the data layer |
+| a promotion **is** `update_frontier` | parent archived, child active, evidence + hypothesis + evaluation recorded |
+
+What is **proven** is mechanical: I1–I7 hold in local mode (SQLite, 10,000
+seeds), evaluation runs are exactly-once under worker kills (E0), memory is
+frozen during comparisons, the verifier is hidden and Docker-sandboxed, and a
+real Claude Code trajectory can be forked mid-run and resumed under a
+different harness. What is **open** is statistical: whether refinement
+improves a real agent at an affordable cost. The experiments that answer it
+(E1–E5) are built and pre-registered; results so far are on a seeded
+synthetic agent and are labeled pipeline validation, never capability.
+
+Details: [`docs/REFINEMENT.md`](docs/REFINEMENT.md) ·
+departures from the spec: [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ---
 
@@ -211,8 +248,8 @@ cp .env.example .env
 uv sync
 docker compose -f infra/docker-compose.yml up -d postgres
 
-# the suite (live-LLM test skips without ANTHROPIC_API_KEY)
-cd backend && uv run pytest tests -q          # → 128 passed, 1 skipped
+# the suite (live-model tests skip without ANTHROPIC_API_KEY / HARNESS_LIVE_CLAUDE=1)
+cd backend && uv run pytest tests -q          # → 244 passed, 2 skipped
 
 # a full durable run with the deterministic mock workload
 uv run meta-harness loop --proposer mock --mock-bench --budget 2 --fresh
@@ -251,7 +288,10 @@ subprocess/shell and the frozen tool contract includes `run_bash`.
 
 | Doc | What it is |
 |---|---|
-| [`documents/REPOSITIONING_PLAN.md`](documents/REPOSITIONING_PLAN.md) | The plan this repo executes — phases, non-goals, honesty rules |
+| [`documents/VISION.md`](documents/VISION.md) · [`ARCHITECTURE.md`](documents/ARCHITECTURE.md) · [`DESIGN.md`](documents/DESIGN.md) | The refinement layer: claim, architecture, concrete specification |
+| [`docs/REFINEMENT.md`](docs/REFINEMENT.md) | What is built, how to run it, experiment results with commands |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every departure from the spec and the reason |
+| [`documents/REPOSITIONING_PLAN.md`](documents/REPOSITIONING_PLAN.md) | The runtime plan — phases, non-goals, honesty rules |
 | [`docs/INVARIANTS.md`](docs/INVARIANTS.md) | The spec: I1–I7, state machine, fencing-token analysis, DST findings |
 | [`documents/MCP_SERVER_SPEC.md`](documents/MCP_SERVER_SPEC.md) | Phase 6 expanded: the MCP surface and acceptance scenario |
 | [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) | Current verified state — every number with its reproduction command |

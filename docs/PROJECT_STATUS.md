@@ -1,6 +1,89 @@
 # Project Status — Meta-Harness
 
-> Last updated: 2026-08-05 (macOS workspace, `durable-runtime` branch)
+> Last updated: 2026-09-15 (macOS workspace, `praxis-refinement` branch).
+> The refinement layer (VISION / ARCHITECTURE / DESIGN in `documents/`) is
+> reported in its own section directly below; the runtime sections after it
+> are unchanged history.
+
+---
+
+## Refinement layer — verified snapshot (2026-09-15)
+
+What was built and how it maps to the spec: [`docs/REFINEMENT.md`](REFINEMENT.md).
+Every departure from the spec and why: [`docs/DECISIONS.md`](DECISIONS.md).
+
+Durability claims and capability claims are reported separately (VISION §6
+rule 4). **No capability claim is made about a real agent.**
+
+### Durability / mechanics (deterministic)
+
+```bash
+cd backend && uv run pytest tests -q
+```
+
+Result: **244 passed, 2 skipped** (skips: live-LLM inner-loop test without
+`ANTHROPIC_API_KEY`; opt-in live Claude fork test without
+`HARNESS_LIVE_CLAUDE=1`). Postgres-backed tests execute.
+
+```bash
+cd backend && uv run python -m sim.run --seeds 10000                    # 10000 seeds run, 0 failed (fenced_store, memory)
+cd backend && uv run python -m sim.run --seeds 10000 --backend sqlite   # 10000 seeds run, 0 failed (fenced_store, sqlite)
+```
+
+Local mode (SQLite) passes I1–I7 under the same simulator, and the same seed
+yields the identical schedule and verdict on both backings
+(`test_sqlite_backend_reproduces_dst1_and_matches_memory_schedule`).
+
+```bash
+harness tasks check        # 25 tasks, 0 failed hygiene (docker verifier, k=3)
+```
+
+**E0 — real workload wired in, invariants hold** (synthetic agent, docker
+verifier, pre-registered `experiments/preregistered/20260915T082259Z-E0.json`):
+
+```bash
+HARNESS_HOME=~/.harness/research harness experiment e0 --agent synthetic --workers 4
+```
+
+Result (`experiments/results/20260915T082604Z-E0-synthetic.json`): passed —
+20 specs, 20 fenced iteration records, 0 duplicates, 20 evaluations; a worker
+killed mid-branch had its branch reclaimed at fence 2; DST 500 seeds on
+memory and SQLite, 0 failures.
+
+**Real agent through the full stack (mechanics, n=2 runs — not a measurement):**
+
+```bash
+harness init --agent claude --model claude-haiku-4-5-20251001
+harness run --task task-001-fix-typo            # success, 11/11 tests, docker verifier
+harness run --task task-004-handle-error --seed 1   # success, 11/11 tests, docker verifier
+HARNESS_LIVE_CLAUDE=1 uv run pytest tests/test_claude_code_adapter.py::test_live_claude_trajectory_forks_mid_run   # 1 passed
+```
+
+The first run surfaced an environmental failure (host had no `python`;
+`python3 -m pytest` needed approval) that would have been mis-learned as an
+"unverified submit" lesson; fixed in `claude_code.agent_env` (commit b175ba5).
+
+### Capability (statistical) — synthetic agent only
+
+E1, E2, E4, E5 on the synthetic agent are running at the time of writing;
+their results are recorded in [`docs/REFINEMENT.md`](REFINEMENT.md) §5 with
+reproduction commands. Synthetic-agent results validate the measurement
+pipeline and are not evidence that refinement helps a real agent. E3 needs
+two human label files and has not been run.
+
+### DESIGN §8 phase gates
+
+| Phase | Deliverable | Gate | Status |
+|---|---|---|---|
+| 0 | real workload wired in; invariants hold | DST green | ✅ built; E0 passed; DST green on both backings |
+| 1 | experience store + trigger policy | E1 null test passes | built; gate evaluated on synthetic agent only (REFINEMENT §5); **not run on a real agent** |
+| 2 | fork-based evaluation harness | E2 produces a ratio | built; ratio on synthetic agent only; **not run on a real agent** |
+| 3 | memory versioning; freeze-during-compare | memory isolated in comparison | ✅ built and tested (`test_memory_frozen_during_comparison`) |
+| 4 | reflection + step attribution | E3 FPR acceptable | built; **E3 not run (needs two human labelers)** |
+| 5 | comparison gate + promotion | E4/E5 clear | built; synthetic agent only; **not run on a real agent** |
+| 6 | continuous loop under budget | all above | built; end-to-end cycle exercised on the synthetic agent (`test_refinement_loop.py`) |
+
+---
 
 **Framing:** this project is a *durable execution runtime for long-horizon
 agent workflows* — checkpointed, forkable, crash-recoverable — verified by

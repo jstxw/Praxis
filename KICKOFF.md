@@ -24,13 +24,18 @@ Read both fully before writing code.
 
 <!-- EDIT THIS BLOCK EACH SESSION. It is the only part that goes stale. -->
 
-- Phases complete: 0, 1, 2, 3, 4.0, 4.1, 4.2, 4.3, 5 (landed as Docker-per-trial — see docs/PHASE5_SANDBOX.md), 6 (MCP server + acceptance scenario)
-- In progress: —
-- Remaining: 4.4 fork-UI polish (modal exists), 4.5 sandbox badges in UI (backend field exists), repo rename consideration (plan §7)
-- Suite status (`cd backend && uv run python -m pytest tests -q | tail -1`, 2026-08-06):
-  `128 passed, 1 skipped in 30.69s` (skip = live-LLM test without ANTHROPIC_API_KEY)
-- DST: `cd backend && uv run python -m sim.run --seeds 10000` → 0 failures
+- Runtime plan (REPOSITIONING_PLAN): phases 0–6 complete (unchanged).
+- Refinement layer (documents/VISION.md, ARCHITECTURE.md, DESIGN.md) on branch
+  `praxis-refinement`: DESIGN §8 phases 0–6 **built**; see `docs/REFINEMENT.md`
+  and `docs/DECISIONS.md`. Statistical gates (E1–E5) evaluated on the synthetic
+  agent only; **not run on a real agent** (budget decision); E3 needs two human
+  label files.
+- Suite status (`cd backend && uv run python -m pytest tests -q | tail -1`, 2026-09-15):
+  `244 passed, 2 skipped` (skips = live-LLM test, opt-in live Claude fork test)
+- DST: `cd backend && uv run python -m sim.run --seeds 10000 [--backend sqlite]` → 0 failures on both backings
   (found bugs documented with seeds in `docs/INVARIANTS.md`: DST-1 seed 7, DST-2 seed 9270)
+- Next: real-agent E1 (`harness experiment e1 --agent claude --model <pinned> --register`, then run);
+  E3 labelling (`harness experiment e3 --template labels.json`)
 
 ## This session
 
