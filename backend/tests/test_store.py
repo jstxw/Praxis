@@ -346,6 +346,34 @@ async def test_worker_reaping_removes_only_stale_rows(store_ctx, request):
     await store.remove_worker(live)
 
 
+async def test_i5_claim_filters_partition_queues(store_ctx, request):
+    """Two worker fleets sharing branch_runs never claim each other's
+    branches: harness-evaluation runs vs everything else."""
+    store, _, _ = store_ctx
+    run_id = _run_id(request)
+    eval_prefix = f"{run_id}-hx_"  # '_' must match literally, not as LIKE wildcard
+    outer = await _mk_branch(store, f"{run_id}-hxZ")  # would match an unescaped '_'
+    evaluation = await _mk_branch(store, f"{eval_prefix}1")
+
+    got_eval = await store.claim_next_branch(
+        worker_id="eval-w", lease_ttl_s=60, run_prefix=eval_prefix
+    )
+    assert got_eval is not None and got_eval.branch_id == evaluation.branch_id
+    assert (
+        await store.claim_next_branch(
+            worker_id="eval-w", lease_ttl_s=60, run_prefix=eval_prefix
+        )
+        is None
+    )
+    got_outer = await store.claim_next_branch(
+        worker_id="outer-w",
+        lease_ttl_s=60,
+        run_prefix=run_id,
+        exclude_run_prefix=eval_prefix,
+    )
+    assert got_outer is not None and got_outer.branch_id == outer.branch_id
+
+
 async def test_i7_event_seq_gapless_under_concurrent_appends(store_ctx, request):
     store, _, _ = store_ctx
     run_id = _run_id(request)

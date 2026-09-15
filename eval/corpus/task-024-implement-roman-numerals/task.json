@@ -1,0 +1,10 @@
+{
+  "id": "task-024-implement-roman-numerals",
+  "capability": "implement-spec",
+  "instruction": "Implement `to_roman(n)` and `from_roman(s)` in roman.py per the module docstring. `to_roman` converts an int in 1..3999 to its canonical uppercase Roman numeral (e.g. 1994 -> 'MCMXCIV') and raises ValueError for anything outside that range; it must also raise TypeError for non-int input, including bool and float. `from_roman` converts a canonical uppercase Roman numeral back to an int and raises ValueError for anything that is not the canonical form of a number in 1..3999: empty string, lowercase, surrounding whitespace, invalid characters, too many repeats ('IIII', 'VV'), and non-canonical orderings ('IM', 'IC', 'XM', 'VX'). `from_roman(to_roman(n)) == n` must hold for every n in 1..3999. All tests in tests/test_roman.py must pass.",
+  "test_command": "pytest tests/test_roman.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["roman.py"],
+  "test_files": ["tests/test_roman.py"],
+  "difficulty": "medium"
+}

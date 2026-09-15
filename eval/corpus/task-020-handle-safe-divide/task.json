@@ -1,0 +1,10 @@
+{
+  "id": "task-020-handle-safe-divide",
+  "capability": "error-handling",
+  "instruction": "`safe_divide(a, b, default=None)` in safe_math.py currently crashes when b is zero. Change it so that division by zero (including 0.0 and -0.0) returns `default` instead of raising. Only division by zero should be handled: other errors, such as TypeError for non-numeric operands like safe_divide('6', 2), must still propagate unchanged. Normal division must keep returning a / b. Do not change `safe_int()`. All tests in tests/test_safe_math.py must pass.",
+  "test_command": "pytest tests/test_safe_math.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["safe_math.py"],
+  "test_files": ["tests/test_safe_math.py"],
+  "difficulty": "easy"
+}

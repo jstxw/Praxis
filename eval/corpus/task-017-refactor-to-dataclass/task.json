@@ -1,0 +1,10 @@
+{
+  "id": "task-017-refactor-to-dataclass",
+  "capability": "refactor",
+  "instruction": "The `Product` class in models.py hand-writes __init__, __eq__, __hash__ and __repr__. Refactor it into a frozen dataclass (`@dataclasses.dataclass(frozen=True)`) with fields in this order: sku: str, name: str, price_cents: int, tags: tuple[str, ...] = (). Delete the hand-written dunder methods (let the dataclass generate them). Keep `with_price(new_price_cents)` returning a NEW Product (the original is unchanged) and keep `has_tag(tag)`. Keep the existing validation (negative price raises ValueError) in `__post_init__`, and make the constructor convert a list passed as `tags` into a tuple so instances stay hashable. All tests in tests/test_models.py must pass.",
+  "test_command": "pytest tests/test_models.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["models.py"],
+  "test_files": ["tests/test_models.py"],
+  "difficulty": "medium"
+}

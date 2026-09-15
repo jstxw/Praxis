@@ -161,7 +161,12 @@ class StateStore(Protocol):
     ) -> BranchRow: ...
 
     async def claim_next_branch(
-        self, *, worker_id: str, lease_ttl_s: float
+        self,
+        *,
+        worker_id: str,
+        lease_ttl_s: float,
+        run_prefix: str | None = None,
+        exclude_run_prefix: str | None = None,
     ) -> BranchRow | None: ...
 
     async def heartbeat(
@@ -284,18 +289,26 @@ class InMemoryStateStore:
         return _copy_row(row)
 
     async def claim_next_branch(
-        self, *, worker_id: str, lease_ttl_s: float
+        self,
+        *,
+        worker_id: str,
+        lease_ttl_s: float,
+        run_prefix: str | None = None,
+        exclude_run_prefix: str | None = None,
     ) -> BranchRow | None:
         now = self._now()
         claimable = [
             r
             for r in self._branches.values()
-            if r.status == "created"
-            or (
-                r.status == "running"
-                and r.lease_expires_at is not None
-                and r.lease_expires_at < now
+            if (
+                r.status == "created"
+                or (
+                    r.status == "running"
+                    and r.lease_expires_at is not None
+                    and r.lease_expires_at < now
+                )
             )
+            and _run_matches(r.run_id, run_prefix, exclude_run_prefix)
         ]
         if not claimable:
             return None
@@ -513,6 +526,39 @@ class InMemoryStateStore:
             self._event_waiters.get(run_id, []).remove(waiter)
 
 
+def _run_matches(
+    run_id: str, run_prefix: str | None, exclude_run_prefix: str | None
+) -> bool:
+    """Claim filter: separate branch queues sharing one ``branch_runs``
+    table (e.g. LangGraph outer-loop branches vs harness evaluation)."""
+    if run_prefix is not None and not run_id.startswith(run_prefix):
+        return False
+    if exclude_run_prefix is not None and run_id.startswith(exclude_run_prefix):
+        return False
+    return True
+
+
+def claim_filter_sql(
+    run_prefix: str | None, exclude_run_prefix: str | None, *, placeholder: str
+) -> tuple[str, list[str]]:
+    """Portable ``AND …`` clause + params for the claim filters."""
+    clause, params = "", []
+    if run_prefix is not None:
+        clause += f" AND run_id LIKE {placeholder} ESCAPE '!'"
+        params.append(_like_prefix(run_prefix))
+    if exclude_run_prefix is not None:
+        clause += f" AND run_id NOT LIKE {placeholder} ESCAPE '!'"
+        params.append(_like_prefix(exclude_run_prefix))
+    return clause, params
+
+
+def _like_prefix(prefix: str) -> str:
+    # '!' as the escape char: identical LIKE … ESCAPE semantics in SQLite
+    # and Postgres, and no backslash-quoting differences.
+    escaped = prefix.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+    return escaped + "%"
+
+
 def _copy_row(row: BranchRow) -> BranchRow:
     return BranchRow(
         branch_id=row.branch_id,
@@ -597,14 +643,14 @@ CREATE TABLE IF NOT EXISTS run_events (
 _CLAIM_SQL = """
 UPDATE branch_runs SET
     status           = 'running',
-    lease_owner      = %(worker_id)s,
+    lease_owner      = %s,
     lease_generation = lease_generation + 1,
-    lease_expires_at = now() + %(lease_ttl)s * interval '1 second',
+    lease_expires_at = now() + %s * interval '1 second',
     started_at       = COALESCE(started_at, now())
 WHERE branch_id = (
     SELECT branch_id FROM branch_runs
-    WHERE status = 'created'
-       OR (status = 'running' AND lease_expires_at < now())
+    WHERE (status = 'created'
+       OR (status = 'running' AND lease_expires_at < now())){filters}
     ORDER BY created_at
     FOR UPDATE SKIP LOCKED
     LIMIT 1
@@ -676,10 +722,19 @@ class PostgresStateStore:
         return self._row(await cur.fetchone())
 
     async def claim_next_branch(
-        self, *, worker_id: str, lease_ttl_s: float
+        self,
+        *,
+        worker_id: str,
+        lease_ttl_s: float,
+        run_prefix: str | None = None,
+        exclude_run_prefix: str | None = None,
     ) -> BranchRow | None:
+        filters, filter_params = claim_filter_sql(
+            run_prefix, exclude_run_prefix, placeholder="%s"
+        )
         cur = await self._conn.execute(
-            _CLAIM_SQL, {"worker_id": worker_id, "lease_ttl": lease_ttl_s}
+            _CLAIM_SQL.format(filters=filters),
+            (worker_id, lease_ttl_s, *filter_params),
         )
         record = await cur.fetchone()
         return self._row(record) if record else None

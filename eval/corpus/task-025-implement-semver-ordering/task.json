@@ -1,0 +1,10 @@
+{
+  "id": "task-025-implement-semver-ordering",
+  "capability": "implement-spec",
+  "instruction": "Implement `parse_version`, `compare_versions`, and `sort_versions` in versioning.py according to the spec in README.md (a subset of Semantic Versioning 2.0.0). Read the README carefully, especially: pre-release versions have LOWER precedence than the release; pre-release identifiers made only of digits compare numerically, others compare lexically in ASCII order, numeric identifiers are lower than alphanumeric ones, and a shorter identifier list is lower when all preceding identifiers are equal; build metadata is ignored for ordering; leading zeros in numeric parts are invalid; `sort_versions` must be stable (versions of equal precedence keep their input order) and must not mutate its input. Do not modify README.md or the tests. All tests in tests/test_versioning.py must pass.",
+  "test_command": "pytest tests/test_versioning.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["versioning.py"],
+  "test_files": ["tests/test_versioning.py"],
+  "difficulty": "hard"
+}

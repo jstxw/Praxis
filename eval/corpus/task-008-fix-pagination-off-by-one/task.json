@@ -1,0 +1,10 @@
+{
+  "id": "task-008-fix-pagination-off-by-one",
+  "capability": "bug-fix",
+  "instruction": "pagination.py has off-by-one bugs. Pages are 1-indexed. `page_count(total, per_page)` must return the number of pages needed (0 when total is 0; exact multiples must not produce an extra empty page). `get_page(items, page, per_page)` must return the items on that 1-indexed page, the last page may be shorter, and a page past the end (or page < 1) returns []. `per_page < 1` must raise ValueError in both functions. Do not change the function signatures. All tests in tests/test_pagination.py must pass.",
+  "test_command": "pytest tests/test_pagination.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["pagination.py"],
+  "test_files": ["tests/test_pagination.py"],
+  "difficulty": "medium"
+}

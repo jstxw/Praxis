@@ -1,0 +1,33 @@
+"""A shopping cart. Line items are dicts: {"sku": str, "price_cents": int, "qty": int}."""
+
+
+class Cart:
+    def __init__(self, lines=[]):
+        self.lines = lines
+
+    def add(self, sku: str, price_cents: int, qty: int = 1) -> None:
+        for line in self.lines:
+            if line["sku"] == sku:
+                line["qty"] += qty
+                return
+        self.lines.append({"sku": sku, "price_cents": price_cents, "qty": qty})
+
+    def set_quantity(self, sku: str, qty: int) -> None:
+        for line in self.lines:
+            if line["sku"] == sku:
+                line["qty"] = qty
+                return
+        raise KeyError(sku)
+
+    def total_cents(self) -> int:
+        return sum(line["price_cents"] * line["qty"] for line in self.lines)
+
+    def copy(self) -> "Cart":
+        return Cart(list(self.lines))
+
+
+def merge(a: Cart, b: Cart) -> Cart:
+    """Return a new cart containing the lines of both carts (quantities summed by sku)."""
+    for line in b.lines:
+        a.add(line["sku"], line["price_cents"], line["qty"])
+    return a

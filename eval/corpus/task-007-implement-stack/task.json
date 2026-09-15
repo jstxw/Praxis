@@ -1,0 +1,17 @@
+{
+  "id": "task-007-implement-stack",
+  "capability": "implement-spec",
+  "instruction": "Implement a Stack class in stack.py with these operations: push(x), pop() (raises IndexError on empty), peek() (raises IndexError on empty), is_empty() -> bool, __len__(). Stack is LIFO. All tests in tests/test_stack.py must pass.",
+  "test_command": "pytest tests/test_stack.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": [
+    "stack.py"
+  ],
+  "test_files": [
+    "tests/test_stack.py"
+  ],
+  "difficulty": "easy",
+  "baseline_pass_rate": 0.55,
+  "best_known_pass_rate": 0.9,
+  "migrated_from": "eval/holdout/task-007-implement-stack"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "task-013-add-allocate-cents",
+  "capability": "add-function",
+  "instruction": "Add a function `allocate(total_cents, weights)` to money.py that splits an integer amount of cents across len(weights) buckets in proportion to the non-negative integer weights, using the largest-remainder method: each bucket first gets floor(total_cents * w / sum(weights)); the leftover cents are then handed out one at a time to the buckets with the largest fractional remainders, breaking ties by lower index. The result is a list of ints whose sum is exactly total_cents. Use exact integer arithmetic (amounts can be larger than 2**53, so float math is wrong). total_cents must be >= 0. Raise ValueError for: empty weights, any negative weight, all weights zero, or negative total_cents. Do not change `format_cents()`. All tests in tests/test_money.py must pass.",
+  "test_command": "pytest tests/test_money.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["money.py"],
+  "test_files": ["tests/test_money.py"],
+  "difficulty": "hard"
+}

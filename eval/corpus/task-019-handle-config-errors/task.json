@@ -1,0 +1,10 @@
+{
+  "id": "task-019-handle-config-errors",
+  "capability": "error-handling",
+  "instruction": "`load_config(text, required=())` in config.py crashes with unhelpful built-in exceptions on bad input. Make it raise the existing `ConfigError` (a ValueError subclass) with a clear message instead: a non-blank, non-comment line without '=' raises ConfigError whose message contains 'line N' (1-based, counting blank and comment lines); a line with an empty key (e.g. '=value') also raises ConfigError mentioning its line; a key defined twice raises ConfigError mentioning the key name and the line of the second definition; missing required keys raise ConfigError listing ALL missing keys in sorted order separated by ', '. Blank lines and lines whose first non-space character is '#' are ignored. Keys and values are stripped of surrounding whitespace; a value may contain '=' and may be empty. Valid configs must keep working. All tests in tests/test_config.py must pass.",
+  "test_command": "pytest tests/test_config.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["config.py"],
+  "test_files": ["tests/test_config.py"],
+  "difficulty": "medium"
+}

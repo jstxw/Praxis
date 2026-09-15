@@ -1,0 +1,10 @@
+{
+  "id": "task-014-add-top-words",
+  "capability": "add-function",
+  "instruction": "Add a function `top_words(text, n)` to text_stats.py. Use the existing `tokenize()` helper to get words, compare words case-insensitively using str.casefold() (so 'Straße' and 'STRASSE' are the same word), and return a list of (word, count) tuples for the `n` most frequent words, where `word` is the casefolded form. Order by count descending; words with equal counts must appear in the order they FIRST occurred in the text. If n <= 0 return []; if n exceeds the number of distinct words return all of them. Do not change `tokenize()` or `word_count()`. All tests in tests/test_text_stats.py must pass.",
+  "test_command": "pytest tests/test_text_stats.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["text_stats.py"],
+  "test_files": ["tests/test_text_stats.py"],
+  "difficulty": "medium"
+}

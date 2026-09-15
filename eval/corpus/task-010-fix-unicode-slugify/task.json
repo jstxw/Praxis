@@ -1,0 +1,10 @@
+{
+  "id": "task-010-fix-unicode-slugify",
+  "capability": "bug-fix",
+  "instruction": "`slugify(text)` in slugs.py is buggy. The intended behavior (see its docstring) is: Unicode-normalize with NFKD and drop combining marks so accented Latin letters become plain ASCII ('Crème Brûlée' -> 'creme-brulee'); lowercase; every run of one or more characters that are not ASCII letters or digits becomes a single '-'; no leading or trailing '-'; any characters with no ASCII form (e.g. '日本') are dropped like punctuation; an empty or all-punctuation input returns ''. An optional `max_length` truncates the slug to at most that many characters without leaving a trailing '-'. Fix slugify so it matches the docstring. All tests in tests/test_slugs.py must pass.",
+  "test_command": "pytest tests/test_slugs.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["slugs.py"],
+  "test_files": ["tests/test_slugs.py"],
+  "difficulty": "hard"
+}

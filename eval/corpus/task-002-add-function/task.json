@@ -1,0 +1,18 @@
+{
+  "id": "task-002-add-function",
+  "capability": "add-function",
+  "instruction": "Add a `median()` function to stats.py. It must: (a) return the middle element for odd-length lists; (b) return the average of the two middle elements for even-length lists; (c) work on unsorted input; (d) raise ValueError on an empty list; (e) NOT mutate the caller's input list. Do not change `mean()`. All tests in tests/test_stats.py must pass.",
+  "test_command": "pytest tests/test_stats.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": [
+    "stats.py"
+  ],
+  "test_files": [
+    "tests/test_stats.py"
+  ],
+  "difficulty": "medium",
+  "baseline_pass_rate": 0.65,
+  "best_known_pass_rate": 0.9,
+  "calibration_note": "Hardened 2026-04-25 (option 3). Added: input-mutation check (most common gotcha — values.sort() vs sorted()), duplicates-counted check, two-element-average sanity. See docs/PROJECT_KNOWLEDGE_BASE.md §28.2.",
+  "migrated_from": "eval/tasks/task-002-add-function"
+}

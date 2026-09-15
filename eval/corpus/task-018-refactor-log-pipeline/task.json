@@ -1,0 +1,10 @@
+{
+  "id": "task-018-refactor-log-pipeline",
+  "capability": "refactor",
+  "instruction": "`summarize(lines, min_level='INFO')` in logs.py is one monolithic loop that parses, filters and aggregates log lines. Refactor it into three composable module-level functions and make `summarize` a composition of them: (1) `parse_line(line) -> dict | None` returns {'level': str, 'component': str, 'message': str} for a well-formed line and None for a malformed one (same parsing rules as today); (2) `filter_level(records, min_level)` must be a LAZY generator (it must work on an infinite iterator) yielding records whose level is at or above min_level; (3) `count_by_component(records) -> dict[str, int]` counts records per component with keys in first-seen order. `summarize` must keep exactly its current return value and must not itself contain a for/while loop. Unknown `min_level` raises ValueError from both `filter_level` and `summarize`. All tests in tests/test_logs.py must pass.",
+  "test_command": "pytest tests/test_logs.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["logs.py"],
+  "test_files": ["tests/test_logs.py"],
+  "difficulty": "hard"
+}

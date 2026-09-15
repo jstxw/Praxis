@@ -39,6 +39,7 @@ from app.meta_harness.store import (
     StoredEvent,
     UnknownBranchError,
     WorkerRow,
+    claim_filter_sql,
 )
 
 DEFAULT_STATE_PATH = Path.home() / ".harness" / "state.db"
@@ -199,20 +200,28 @@ class SQLiteStateStore:
         return row
 
     async def claim_next_branch(
-        self, *, worker_id: str, lease_ttl_s: float
+        self,
+        *,
+        worker_id: str,
+        lease_ttl_s: float,
+        run_prefix: str | None = None,
+        exclude_run_prefix: str | None = None,
     ) -> BranchRow | None:
         now = self._now()
+        filters, filter_params = claim_filter_sql(
+            run_prefix, exclude_run_prefix, placeholder="?"
+        )
         with self._immediate() as conn:
             # rowid breaks created_at ties FIFO (frozen virtual clock).
             record = conn.execute(
-                """
+                f"""
                 SELECT branch_id FROM branch_runs
-                WHERE status = 'created'
-                   OR (status = 'running' AND lease_expires_at < ?)
+                WHERE (status = 'created'
+                   OR (status = 'running' AND lease_expires_at < ?)){filters}
                 ORDER BY created_at, rowid
                 LIMIT 1;
                 """,
-                (now,),
+                (now, *filter_params),
             ).fetchone()
             if record is None:
                 return None

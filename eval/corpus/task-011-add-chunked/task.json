@@ -1,0 +1,10 @@
+{
+  "id": "task-011-add-chunked",
+  "capability": "add-function",
+  "instruction": "Add a function `chunked(iterable, size)` to iterutils.py. It returns a list of lists, each containing up to `size` consecutive items from `iterable` in order; the final chunk may be shorter; an empty iterable returns []. It must accept any iterable (including generators and strings, where each chunk is a list of characters). `size` less than 1 must raise ValueError. Do not change `flatten()`. All tests in tests/test_iterutils.py must pass.",
+  "test_command": "pytest tests/test_iterutils.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["iterutils.py"],
+  "test_files": ["tests/test_iterutils.py"],
+  "difficulty": "easy"
+}

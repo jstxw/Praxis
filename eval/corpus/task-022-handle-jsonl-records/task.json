@@ -1,0 +1,10 @@
+{
+  "id": "task-022-handle-jsonl-records",
+  "capability": "error-handling",
+  "instruction": "`parse_records(text)` in records.py parses JSON Lines text (one JSON document per line) but crashes on the first bad line. Change it to return a tuple `(records, errors)` instead of raising: `records` is the list of valid records in input order; `errors` is a list of `(line_number, reason)` tuples in input order, where line_number is 1-based and counts every line including blank ones. Blank or whitespace-only lines are skipped silently (not errors). A line is an error if it is not valid JSON (reason must start with 'invalid json'), if it is valid JSON but not an object (reason 'not an object'), or if the object has no 'id' key (reason 'missing id'). Non-ASCII content must be preserved exactly. Only json decoding errors may be caught; do not use a bare `except` or `except Exception`. All tests in tests/test_records.py must pass.",
+  "test_command": "pytest tests/test_records.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["records.py"],
+  "test_files": ["tests/test_records.py"],
+  "difficulty": "medium"
+}

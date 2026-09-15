@@ -1,0 +1,10 @@
+{
+  "id": "task-023-implement-lru-cache",
+  "capability": "implement-spec",
+  "instruction": "Implement the `LRUCache` class in lru.py (currently a stub) per its docstring: `LRUCache(capacity)` raises ValueError if capacity < 1; `put(key, value)` inserts or updates and marks the key most-recently used, evicting the least-recently used key when the cache would exceed capacity; `get(key, default=None)` returns the value and marks the key most-recently used, or returns `default` (without changing recency) if absent; `key in cache` does NOT change recency; `len(cache)` is the number of entries; `keys()` returns a list of keys from least- to most-recently used; `evictions` is an int attribute counting evictions so far. Updating an existing key never evicts. Stored values like None must be distinguishable from missing keys via `default`. All tests in tests/test_lru.py must pass.",
+  "test_command": "pytest tests/test_lru.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["lru.py"],
+  "test_files": ["tests/test_lru.py"],
+  "difficulty": "medium"
+}

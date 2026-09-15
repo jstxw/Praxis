@@ -1,0 +1,10 @@
+{
+  "id": "task-015-refactor-shipping-constants",
+  "capability": "refactor",
+  "instruction": "shipping.py repeats the same magic numbers in several functions. Refactor it so these values are defined once as module-level constants with exactly these names and values: FREE_SHIPPING_THRESHOLD_CENTS = 5000, FLAT_RATE_CENTS = 499, EXPRESS_SURCHARGE_CENTS = 1500. The functions `shipping_cost`, `express_cost`, and `qualifies_for_free_shipping` must use the constants and must no longer contain the numeric literals 5000, 499, or 1500 in their bodies. Behavior and function signatures must not change. All tests in tests/test_shipping.py must pass.",
+  "test_command": "pytest tests/test_shipping.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["shipping.py"],
+  "test_files": ["tests/test_shipping.py"],
+  "difficulty": "easy"
+}

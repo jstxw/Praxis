@@ -1,0 +1,10 @@
+{
+  "id": "task-009-fix-cart-aliasing",
+  "capability": "bug-fix",
+  "instruction": "cart.py has state-sharing bugs. (1) Two `Cart()` instances created without arguments share the same underlying line list. (2) `Cart(lines)` keeps a reference to the caller's list, so later changes to the cart leak into it (and vice versa). (3) `Cart.copy()` returns a cart whose line dicts are the same objects as the original's, so changing a quantity in the copy changes the original. (4) `merge(a, b)` mutates `a`. Fix all of these so carts never share mutable state with each other or with caller-provided data, while keeping the public API (`Cart`, `add`, `set_quantity`, `total_cents`, `copy`, `lines`, `merge`) and its return values unchanged. All tests in tests/test_cart.py must pass.",
+  "test_command": "pytest tests/test_cart.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["cart.py"],
+  "test_files": ["tests/test_cart.py"],
+  "difficulty": "hard"
+}

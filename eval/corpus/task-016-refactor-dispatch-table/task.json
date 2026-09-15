@@ -1,0 +1,10 @@
+{
+  "id": "task-016-refactor-dispatch-table",
+  "capability": "refactor",
+  "instruction": "`run(command, a, b)` in commands.py is a long if/elif chain. Refactor it to use a module-level dict named `OPERATIONS` that maps each command name ('add', 'sub', 'mul', 'div', 'pow', 'max', 'min') to a callable taking (a, b). `run` must look the command up in `OPERATIONS` at call time (so adding an entry to OPERATIONS makes it available to run) and must not contain any if/elif comparisons against command names. Behavior must not change: command names are matched case-insensitively after stripping surrounding whitespace, an unknown command raises ValueError whose message contains the original command string, and 'div' by zero still raises ZeroDivisionError. All tests in tests/test_commands.py must pass.",
+  "test_command": "pytest tests/test_commands.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["commands.py"],
+  "test_files": ["tests/test_commands.py"],
+  "difficulty": "medium"
+}

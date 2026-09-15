@@ -1,0 +1,10 @@
+{
+  "id": "task-021-handle-retry",
+  "capability": "error-handling",
+  "instruction": "`call_with_retry(fn, attempts=3, retry_on=(ConnectionError,), backoff=0.5, sleep=None)` in retry.py has broken error handling. Fix it to follow its docstring exactly: raise ValueError (without calling fn) if attempts < 1; call fn() at most `attempts` times in total; retry only when fn raises an instance of one of the `retry_on` exception types (subclasses count); any other exception propagates immediately without further calls or sleeps; between attempts (never after the last one) call sleep(backoff * 2**i) where i is 0 for the first wait, 1 for the second, and so on; if every attempt fails, re-raise the LAST exception object itself (same type, same instance, not wrapped). `sleep` defaults to a no-op when None; never call time.sleep. All tests in tests/test_retry.py must pass.",
+  "test_command": "pytest tests/test_retry.py -q",
+  "full_test_command": "pytest -q",
+  "scope_files": ["retry.py"],
+  "test_files": ["tests/test_retry.py"],
+  "difficulty": "hard"
+}

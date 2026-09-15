@@ -47,6 +47,7 @@ from app.meta_harness.store import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+EVAL_RUN_PREFIX = "hx-"  # harness evaluation runs (app.refinement.evaluation)
 
 
 def default_worker_id() -> str:
@@ -255,8 +256,12 @@ async def run_worker(
 
             runners: dict[str, tuple[Any, Any]] = {}
             while max_branches is None or processed < max_branches:
+                # Harness-evaluation branches share branch_runs in service
+                # mode; they belong to the evaluation workers, not here.
                 row = await store.claim_next_branch(
-                    worker_id=worker_id, lease_ttl_s=lease_ttl_s
+                    worker_id=worker_id,
+                    lease_ttl_s=lease_ttl_s,
+                    exclude_run_prefix=EVAL_RUN_PREFIX,
                 )
                 if row is None:
                     await store.touch_worker(worker_id)
