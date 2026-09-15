@@ -230,7 +230,9 @@ class EvaluationRuntime:
         lease_ttl_s: float = 60.0,
         poll_interval_s: float = 0.2,
         run_timeout_s: float = 900.0,
+        verify_concurrency: int = 4,
     ) -> None:
+        self.verify_concurrency = verify_concurrency
         self.state = state
         self.xp = xp
         self.snapshots = snapshots
@@ -412,30 +414,45 @@ class EvaluationRuntime:
     # ── trusted plane ────────────────────────────────────────────────
 
     async def collect(self, plan: EvaluationPlan) -> list[RunResult]:
-        """Evaluate every authoritative iteration record exactly once."""
+        """Evaluate every authoritative iteration record exactly once.
+
+        Verification (sandboxed test runs) is concurrent; experience-store
+        writes stay sequential so one store connection is never used by
+        two transactions at once.
+        """
         specs = {s.index: s for s in plan.specs}
         results: list[RunResult] = []
+        pending: list[tuple[dict[str, Any], RunSpec, StagedTrajectory, list[Any]]] = []
         for row in await self.state.list_iterations(run_id=plan.run_id):
             spec = specs[int(row["branch_id"].rsplit(":", 1)[1])]
             arm = plan.arm(spec.arm)
             trajectory = await self.xp.get_trajectory(row["trajectory_id"])
             evaluation = await self.xp.get_evaluation(row["trajectory_id"]) if trajectory else None
-            if trajectory is None or evaluation is None:
-                staged = StagedTrajectory.from_json(
-                    json.loads(self.snapshots.get_bytes(row["staged_blob"]))
+            if trajectory is not None and evaluation is not None:
+                results.append(RunResult(spec=spec, trajectory=trajectory, evaluation=evaluation))
+                continue
+            staged = StagedTrajectory.from_json(
+                json.loads(self.snapshots.get_bytes(row["staged_blob"]))
+            )
+            if staged.memory_version != arm.memory_version:
+                raise MemoryNotFrozen(
+                    f"trajectory {staged.trajectory_id} ran with memory "
+                    f"{staged.memory_version}, arm pins {arm.memory_version}"
                 )
-                if staged.memory_version != arm.memory_version:
-                    raise MemoryNotFrozen(
-                        f"trajectory {staged.trajectory_id} ran with memory "
-                        f"{staged.memory_version}, arm pins {arm.memory_version}"
-                    )
-                prefix = []
-                if staged.fork_parent is not None:
-                    prefix = [
-                        s for s in await self.xp.full_steps(staged.fork_parent)
-                        if s.step <= (staged.fork_step or 0)
-                    ]
-                trajectory, evaluation = await asyncio.to_thread(
+            prefix: list[Any] = []
+            if staged.fork_parent is not None:
+                prefix = [
+                    s for s in await self.xp.full_steps(staged.fork_parent)
+                    if s.step <= (staged.fork_step or 0)
+                ]
+            pending.append((row, spec, staged, prefix))
+
+        gate = asyncio.Semaphore(max(1, self.verify_concurrency))
+
+        async def verify(item: tuple[dict[str, Any], RunSpec, StagedTrajectory, list[Any]]):
+            row, spec, staged, prefix = item
+            async with gate:
+                return await asyncio.to_thread(
                     evaluate_staged,
                     staged,
                     self.tasks[spec.task_id],
@@ -444,8 +461,11 @@ class EvaluationRuntime:
                     branch_run_id=row["branch_id"],
                     prefix_steps=prefix,
                 )
-                await self.xp.record_trajectory(trajectory, staged.steps)
-                await self.xp.record_evaluation(evaluation)
+
+        scored = await asyncio.gather(*[verify(item) for item in pending])
+        for (_row, spec, staged, _prefix), (trajectory, evaluation) in zip(pending, scored):
+            await self.xp.record_trajectory(trajectory, staged.steps)
+            await self.xp.record_evaluation(evaluation)
             results.append(RunResult(spec=spec, trajectory=trajectory, evaluation=evaluation))
         results.sort(key=lambda r: r.spec.index)
         return results
