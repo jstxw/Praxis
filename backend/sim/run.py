@@ -2,6 +2,7 @@
 
     cd backend && uv run python -m sim.run --seeds 10000
     cd backend && uv run python -m sim.run --seed 4471 --mode unfenced_file -v
+    cd backend && uv run python -m sim.run --seeds 10000 --backend sqlite
 
 A failure without its seed is just a flaky test — the seed is always
 printed, and a single ``--seed`` replays it exactly.
@@ -12,7 +13,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from sim.harness import SimParams, run_seed
+from sim.harness import BACKENDS, SimParams, run_seed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,10 +26,16 @@ def main(argv: list[str] | None = None) -> int:
         choices=["fenced_store", "unfenced_file"],
         default="fenced_store",
     )
+    parser.add_argument(
+        "--backend",
+        choices=list(BACKENDS),
+        default="memory",
+        help="store under test: in-memory fake or local-mode SQLite",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="print trace")
     args = parser.parse_args(argv)
 
-    params = SimParams(protocol=args.mode)
+    params = SimParams(protocol=args.mode, backend=args.backend)
     seeds = [args.seed] if args.seed is not None else range(
         args.start, args.start + args.seeds
     )
@@ -51,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         if total % 500 == 0:
             print(f"… {total} seeds, {failures} failures", file=sys.stderr)
 
-    print(f"{total} seeds run, {failures} failed ({args.mode})")
+    print(f"{total} seeds run, {failures} failed ({args.mode}, {args.backend})")
     return 1 if failures else 0
 
 

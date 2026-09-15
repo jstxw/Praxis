@@ -21,6 +21,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from app.meta_harness.persistence import get_dsn  # noqa: E402
+from app.meta_harness.sqlite_store import SQLiteStateStore  # noqa: E402
 from app.meta_harness.store import (  # noqa: E402
     InMemoryStateStore,
     PostgresStateStore,
@@ -40,23 +41,28 @@ class FakeClock:
         self.now += seconds
 
 
-@pytest.fixture(params=["memory", "postgres"])
-async def store_ctx(request, postgres_available):
+@pytest.fixture(params=["memory", "sqlite", "postgres"])
+async def store_ctx(request, postgres_available, tmp_path):
     """Yield ``(store, clock_or_None, expire_lease)`` per implementation.
 
     ``expire_lease`` is an async callable that makes any lease with the
-    given TTL expire: virtual-clock advance for memory, real sleep for
-    Postgres.
+    given TTL expire: virtual-clock advance for memory and SQLite (local
+    mode), real sleep for Postgres.
     """
-    if request.param == "memory":
+    if request.param in {"memory", "sqlite"}:
         clock = FakeClock()
-        store = InMemoryStateStore(clock=clock)
+        if request.param == "memory":
+            store = InMemoryStateStore(clock=clock)
+        else:
+            store = SQLiteStateStore(tmp_path / "state.db", clock=clock)
         await store.setup()
 
         async def expire(ttl: float) -> None:
             clock.advance(ttl + 1.0)
 
         yield store, clock, expire
+        if request.param == "sqlite":
+            await store.close()
         return
 
     if not postgres_available:

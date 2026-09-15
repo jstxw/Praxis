@@ -40,6 +40,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from app.meta_harness.sqlite_store import SQLiteStateStore  # noqa: E402
 from app.meta_harness.store import (  # noqa: E402
     InMemoryStateStore,
     StaleFenceError,
@@ -99,6 +100,24 @@ class SimParams:
     p_delay_notify: float = 0.10
     max_clock_step: float = 4.0
     step_limit: int = 4000
+    # Store backing under test: the in-memory fake or the local-mode
+    # SQLite store (ARCHITECTURE §1a — sim.run runs against both).
+    backend: str = "memory"
+
+
+BACKENDS = ("memory", "sqlite")
+
+
+def make_store(backend: str, clock: VirtualClock) -> Any:
+    """Build the store under test, driven by the simulator's clock."""
+    if backend == "memory":
+        store: Any = InMemoryStateStore(clock=clock)
+    elif backend == "sqlite":
+        store = SQLiteStateStore(":memory:", clock=clock)
+    else:
+        raise ValueError(f"unknown sim backend {backend!r}; expected {BACKENDS}")
+    _sync(store.setup())
+    return store
 
 
 @dataclass
@@ -378,7 +397,7 @@ class Simulator:
         self.params = params or SimParams()
         self.rng = random.Random(seed)
         self.clock = VirtualClock()
-        self.store = InMemoryStateStore(clock=self.clock)
+        self.store = make_store(self.params.backend, self.clock)
         self.checkpoints: dict[str, int] = {}  # thread_id → iterations done
         self.file_log: list[tuple[str, int]] = []  # the modeled jsonl file
         self.notify_queue: list[int] = []  # NOTIFY seqs in delivery order

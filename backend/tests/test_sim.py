@@ -64,6 +64,25 @@ def test_dst1_documented_bug_seed_7_unfenced_double_append():
     assert fixed.ok, fixed.violations
 
 
+def test_fenced_protocol_passes_seed_sweep_sqlite_backend():
+    """Local mode: I1–I7 hold with the production SQLite store under the
+    same faults (ARCHITECTURE §1a — sim.run runs against both backends)."""
+    for seed in range(200):
+        result = run_seed(seed, SimParams(protocol="fenced_store", backend="sqlite"))
+        assert result.ok, f"seed={seed}: {result.violations}"
+
+
+def test_sqlite_backend_reproduces_dst1_and_matches_memory_schedule():
+    """The SQLite store is a drop-in for the fake: the same seed yields
+    the same schedule and the same verdict on both backings, including
+    the historical DST-1 violation."""
+    for mode in ("unfenced_file", "fenced_store"):
+        mem = run_seed(7, SimParams(protocol=mode, backend="memory"))
+        sql = run_seed(7, SimParams(protocol=mode, backend="sqlite"))
+        assert sql.trace == mem.trace
+        assert sql.violations == mem.violations
+
+
 def test_dst2_documented_zombie_checkpoint_seed_9270():
     """Regression pin for DST-2: seed 9270 exercises the zombie
     trailing-checkpoint write; the run still satisfies I1–I7 because the
