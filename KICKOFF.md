@@ -31,7 +31,7 @@ Read both fully before writing code.
   agent only; **not run on a real agent** (budget decision); E3 needs two human
   label files.
 - Suite status (`cd backend && uv run python -m pytest tests -q | tail -1`, 2026-09-15):
-  `244 passed, 2 skipped` (skips = live-LLM test, opt-in live Claude fork test)
+  `252 passed, 2 skipped` (skips = live-LLM test, opt-in live Claude fork test)
 - DST: `cd backend && uv run python -m sim.run --seeds 10000 [--backend sqlite]` → 0 failures on both backings
   (found bugs documented with seeds in `docs/INVARIANTS.md`: DST-1 seed 7, DST-2 seed 9270)
 - Next: real-agent E1 (`harness experiment e1 --agent claude --model <pinned> --register`, then run);

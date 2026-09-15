@@ -1,0 +1,189 @@
+{
+  "agent": "synthetic",
+  "claim_type": "statistical (one comparison)",
+  "command": "harness experiment e4 --agent synthetic --workers 4",
+  "experiment": "E4",
+  "finished_at": "20260915T085816Z",
+  "label": "SYNTHETIC AGENT \u2014 pipeline validation only. The synthetic agent is an oracle simulator with assumed habits and assumed harness compliance; these numbers are NOT measurements of harness refinement on a real agent.",
+  "model_version": "synthetic-oracle-v1",
+  "n_holdout_tasks": 10,
+  "noise_floor_source": "experiments/results/20260915T085245Z-E1-synthetic.json",
+  "preregistration": "experiments/preregistered/20260915T084642Z-E4.json",
+  "reps": 5,
+  "verdict": {
+    "arm": "good",
+    "audit": {
+      "holdout": {
+        "agents": [
+          "synthetic"
+        ],
+        "infra_errors": 0,
+        "isolation": [
+          "docker"
+        ],
+        "memory_versions": [
+          "0e6b93529aba45ec94095f871dc82383"
+        ],
+        "model_versions": [
+          "synthetic-oracle-v1"
+        ],
+        "runs": 50,
+        "tests_modified": 0,
+        "timeouts": 0,
+        "tokens_incomplete": 0,
+        "voided": 0
+      },
+      "regression": {
+        "agents": [
+          "synthetic"
+        ],
+        "infra_errors": 0,
+        "isolation": [
+          "docker"
+        ],
+        "memory_versions": [
+          "0e6b93529aba45ec94095f871dc82383"
+        ],
+        "model_versions": [
+          "synthetic-oracle-v1"
+        ],
+        "runs": 25,
+        "tests_modified": 0,
+        "timeouts": 0,
+        "tokens_incomplete": 0,
+        "voided": 0
+      }
+    },
+    "complexity_delta": 6.18,
+    "effect_size": -0.12110805860805869,
+    "metrics": {
+      "context_tokens": {
+        "child_mean": 137.0,
+        "ci_lower": -137.0,
+        "ci_upper": -137.0,
+        "improvement": -137.0,
+        "level": 0.95,
+        "metric": "context_tokens",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.0019041950430043902,
+        "parent_mean": 0.0
+      },
+      "diff_size": {
+        "child_mean": 20.740000000000002,
+        "ci_lower": -2.56,
+        "ci_upper": 0.23999999999999969,
+        "improvement": -0.9400000000000002,
+        "level": 0.95,
+        "metric": "diff_size",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 1.0,
+        "parent_mean": 19.8
+      },
+      "files_out_of_scope": {
+        "child_mean": 0.0,
+        "ci_lower": -0.0,
+        "ci_upper": -0.0,
+        "improvement": -0.0,
+        "level": 0.95,
+        "metric": "files_out_of_scope",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 1.0,
+        "parent_mean": 0.0
+      },
+      "redundant_reads": {
+        "child_mean": 0.1,
+        "ci_lower": 0.039999999999999994,
+        "ci_upper": 0.27999999999999997,
+        "improvement": 0.16,
+        "level": 0.95,
+        "metric": "redundant_reads",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.057831277341991914,
+        "parent_mean": 0.26
+      },
+      "regressions": {
+        "child_mean": 0.0,
+        "ci_lower": -0.0,
+        "ci_upper": -0.0,
+        "improvement": -0.0,
+        "level": 0.95,
+        "metric": "regressions",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 1.0,
+        "parent_mean": 0.0
+      },
+      "success": {
+        "child_mean": 0.9400000000000001,
+        "ci_lower": 0.039999999999999994,
+        "ci_upper": 0.27999999999999997,
+        "improvement": 0.13999999999999999,
+        "level": 0.95,
+        "metric": "success",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.09751253817810963,
+        "parent_mean": 0.8
+      },
+      "tokens": {
+        "child_mean": 3623.94,
+        "ci_lower": -0.25065656710432865,
+        "ci_upper": 0.015112720401814845,
+        "improvement": -0.11824894385276097,
+        "level": 0.95,
+        "metric": "tokens",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.130859375,
+        "parent_mean": 3286.84
+      },
+      "tool_calls": {
+        "child_mean": 7.960000000000001,
+        "ci_lower": -0.12110805860805869,
+        "ci_upper": 0.13511424731182797,
+        "improvement": 0.010724524568446652,
+        "level": 0.95,
+        "metric": "tool_calls",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": 0.9593007893622097,
+        "p_value": 0.9593007893622097,
+        "parent_mean": 8.2
+      }
+    },
+    "promotable": false,
+    "reasons": [
+      "cost: tokens +11.8% > MAX_COST 10%",
+      "effect: tool_calls CI lower -0.121 < 2 \u00d7 noise floor 0.209",
+      "significance: Holm-adjusted p 0.959 > alpha 0.05"
+    ],
+    "regression": {
+      "success": {
+        "child_mean": 1.0,
+        "ci_lower": 0.23999999999999994,
+        "ci_upper": 0.4,
+        "improvement": 0.32,
+        "level": 0.95,
+        "metric": "success",
+        "n_reps": 5,
+        "n_tasks": 5,
+        "p_adjusted": null,
+        "p_value": 0.053336852829139844,
+        "parent_mean": 0.6799999999999999
+      }
+    },
+    "score": -0.1334680586080587
+  },
+  "wall_time_s": 136.2
+}

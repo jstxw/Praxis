@@ -1,0 +1,67 @@
+{
+  "experiment": "E2",
+  "registered_at": "20260915T084641Z",
+  "sha256": "7722bd9c21708ccc20237edda8d79f7d0c51c5f858ab3b7f1096f3e13d5d0862",
+  "spec": {
+    "agent": "synthetic",
+    "alpha": 0.05,
+    "analysis_revision": "v2: relative deltas for tool_calls and tokens only; absolute for success and count metrics (v1 divided by zero parent means)",
+    "change": "add targeted_tests verification rule",
+    "experiment": "E2",
+    "fork_rule": "fork at d-1 where d = first pytest run in the H0 seed trajectory (else the step before task_complete)",
+    "level": 0.95,
+    "metrics": [
+      "tool_calls",
+      "tokens",
+      "redundant_reads",
+      "success",
+      "diff_size",
+      "files_out_of_scope",
+      "regressions",
+      "context_tokens"
+    ],
+    "model_version": "synthetic-oracle-v1",
+    "primary_metric": "tool_calls",
+    "report": "variance ratio (scratch/fork) of per-rep paired deltas, tail cost ratio, agreement of sign and significance",
+    "reps": 5,
+    "seed": 20260915,
+    "statistics": "per-task paired deltas; percentile bootstrap CI; Wilcoxon signed-rank; Holm across simultaneous hypotheses",
+    "task_sets": {
+      "holdout": [
+        "task-002-add-function",
+        "task-004-handle-error",
+        "task-007-implement-stack",
+        "task-008-fix-pagination-off-by-one",
+        "task-009-fix-cart-aliasing",
+        "task-014-add-top-words",
+        "task-015-refactor-shipping-constants",
+        "task-017-refactor-to-dataclass",
+        "task-021-handle-retry",
+        "task-025-implement-semver-ordering"
+      ],
+      "regression": [
+        "task-005-implement-spec",
+        "task-010-fix-unicode-slugify",
+        "task-012-add-merge-intervals",
+        "task-016-refactor-dispatch-table",
+        "task-024-implement-roman-numerals"
+      ],
+      "seed": 20260915,
+      "spare": [
+        "task-006-fix-recursion",
+        "task-011-add-chunked",
+        "task-018-refactor-log-pipeline",
+        "task-022-handle-jsonl-records",
+        "task-023-implement-lru-cache"
+      ],
+      "trigger": [
+        "task-001-fix-typo",
+        "task-003-refactor",
+        "task-013-add-allocate-cents",
+        "task-019-handle-config-errors",
+        "task-020-handle-safe-divide"
+      ]
+    },
+    "tasks": "holdout (10)"
+  }
+}

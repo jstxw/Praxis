@@ -21,7 +21,7 @@ rule 4). **No capability claim is made about a real agent.**
 cd backend && uv run pytest tests -q
 ```
 
-Result: **244 passed, 2 skipped** (skips: live-LLM inner-loop test without
+Result: **252 passed, 2 skipped** (skips: live-LLM inner-loop test without
 `ANTHROPIC_API_KEY`; opt-in live Claude fork test without
 `HARNESS_LIVE_CLAUDE=1`). Postgres-backed tests execute.
 
@@ -65,22 +65,37 @@ The first run surfaced an environmental failure (host had no `python`;
 
 ### Capability (statistical) — synthetic agent only
 
-E1, E2, E4, E5 on the synthetic agent are running at the time of writing;
-their results are recorded in [`docs/REFINEMENT.md`](REFINEMENT.md) §5 with
-reproduction commands. Synthetic-agent results validate the measurement
-pipeline and are not evidence that refinement helps a real agent. E3 needs
-two human label files and has not been run.
+Full tables and commands: [`docs/REFINEMENT.md`](REFINEMENT.md) §5. All with
+`HARNESS_HOME=~/.harness/research harness experiment <e> --agent synthetic --workers 4`,
+analysis v2 (D13). Synthetic-agent results validate the measurement pipeline
+and are **not** evidence that refinement helps a real agent.
+
+- **E1** (`experiments/results/20260915T085245Z-E1-synthetic.json`): null test
+  passed (all CIs contain 0); sabotage detected (success −34 pts, CI −46..−21;
+  16/100 runs voided). Noise floor: tool calls 10.5%, success 19 pts.
+- **E2** (`…T085558Z-E2-synthetic.json`): fork tails cost 2.63× less (1.98×
+  with seed trajectories); tool-call variance ratio 1.75; fork and scratch
+  **disagree** on tool-call significance and token sign → holdout gate stays
+  from-scratch (D5).
+- **E4** (`…T085816Z-E4-synthetic.json`): hand-written good harness **rejected**
+  (tokens +11.8% > cap; tool-call CI includes 0) despite success +14 pts
+  (CI +4..+28) — a design tension in "lead with efficiency" flagged in
+  REFINEMENT §5.
+- **E5** (`…T090042Z-E5-synthetic.json`): reflected `read_once` skill cut
+  redundant reads on holdout (+0.34, CI +0.22..+0.46); no overfitting signal;
+  primary metric unmoved.
+- **E3**: not run — needs two human label files.
 
 ### DESIGN §8 phase gates
 
 | Phase | Deliverable | Gate | Status |
 |---|---|---|---|
 | 0 | real workload wired in; invariants hold | DST green | ✅ built; E0 passed; DST green on both backings |
-| 1 | experience store + trigger policy | E1 null test passes | built; gate evaluated on synthetic agent only (REFINEMENT §5); **not run on a real agent** |
-| 2 | fork-based evaluation harness | E2 produces a ratio | built; ratio on synthetic agent only; **not run on a real agent** |
+| 1 | experience store + trigger policy | E1 null test passes | built; null test **passed on the synthetic agent**; **not run on a real agent** |
+| 2 | fork-based evaluation harness | E2 produces a ratio | built; synthetic ratio 1.75 (tool calls) but methods disagree; **not run on a real agent** |
 | 3 | memory versioning; freeze-during-compare | memory isolated in comparison | ✅ built and tested (`test_memory_frozen_during_comparison`) |
 | 4 | reflection + step attribution | E3 FPR acceptable | built; **E3 not run (needs two human labelers)** |
-| 5 | comparison gate + promotion | E4/E5 clear | built; synthetic agent only; **not run on a real agent** |
+| 5 | comparison gate + promotion | E4/E5 clear | built; synthetic E4 rejected, E5 no overfitting — gate **not cleared**; **not run on a real agent** |
 | 6 | continuous loop under budget | all above | built; end-to-end cycle exercised on the synthetic agent (`test_refinement_loop.py`) |
 
 ---

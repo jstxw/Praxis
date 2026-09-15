@@ -3,7 +3,7 @@
 > *A durable execution runtime for long-horizon agent workflows — checkpointed,
 > forkable, crash-recoverable — verified by deterministic simulation testing.*
 
-![tests](https://img.shields.io/badge/tests-244_passed_·_2_skipped-brightgreen)
+![tests](https://img.shields.io/badge/tests-252_passed_·_2_skipped-brightgreen)
 ![DST](https://img.shields.io/badge/DST-10%2C000_seeds_×_2_backings_·_0_failures-brightgreen)
 ![invariants](https://img.shields.io/badge/invariants-I1–I7_verified-blue)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
@@ -249,7 +249,7 @@ uv sync
 docker compose -f infra/docker-compose.yml up -d postgres
 
 # the suite (live-model tests skip without ANTHROPIC_API_KEY / HARNESS_LIVE_CLAUDE=1)
-cd backend && uv run pytest tests -q          # → 244 passed, 2 skipped
+cd backend && uv run pytest tests -q          # → 252 passed, 2 skipped
 
 # a full durable run with the deterministic mock workload
 uv run meta-harness loop --proposer mock --mock-bench --budget 2 --fresh

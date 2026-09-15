@@ -1,0 +1,197 @@
+{
+  "agent": "synthetic",
+  "change": "add targeted_tests verification rule",
+  "claim_type": "statistical (methods)",
+  "command": "harness experiment e2 --agent synthetic --workers 4",
+  "cost": {
+    "cost_ratio_including_seeds": 1.982843137254902,
+    "cost_ratio_scratch_over_fork": 2.6266233766233764,
+    "executed_tool_calls_fork_tails": 308,
+    "executed_tool_calls_scratch": 809,
+    "seed_trajectory_tool_calls": 100
+  },
+  "experiment": "E2",
+  "finished_at": "20260915T085558Z",
+  "fork_points": {
+    "task-002-add-function": {
+      "step": 7,
+      "trajectory": "86cb49151a52d7785cc764255e3ed49a"
+    },
+    "task-004-handle-error": {
+      "step": 7,
+      "trajectory": "7ca0e32fde66357bf131e9b9ad016e64"
+    },
+    "task-007-implement-stack": {
+      "step": 5,
+      "trajectory": "e8b6ce47683e2aa8a03595692c13f220"
+    },
+    "task-008-fix-pagination-off-by-one": {
+      "step": 6,
+      "trajectory": "7a1b1ca96ce970fe236925cd36b1b192"
+    },
+    "task-009-fix-cart-aliasing": {
+      "step": 7,
+      "trajectory": "cb8dba79c2a5af7dec05d5b63a2d9e49"
+    },
+    "task-014-add-top-words": {
+      "step": 6,
+      "trajectory": "edb0e9b370bdd2fe6709302f412d923e"
+    },
+    "task-015-refactor-shipping-constants": {
+      "step": 6,
+      "trajectory": "6fa15ff2cd7ae21fa1e6540ccce16a24"
+    },
+    "task-017-refactor-to-dataclass": {
+      "step": 6,
+      "trajectory": "fc3bd7d35b9feee3e13728a89be57b61"
+    },
+    "task-021-handle-retry": {
+      "step": 6,
+      "trajectory": "09f8e665c54d74e8d16708d55ba1a9b7"
+    },
+    "task-025-implement-semver-ordering": {
+      "step": 5,
+      "trajectory": "580649143c391a3aa1b21645985a9114"
+    }
+  },
+  "label": "SYNTHETIC AGENT \u2014 pipeline validation only. The synthetic agent is an oracle simulator with assumed habits and assumed harness compliance; these numbers are NOT measurements of harness refinement on a real agent.",
+  "metrics": {
+    "redundant_reads": {
+      "agree_sign": true,
+      "agree_significance": true,
+      "fork": {
+        "child_mean": 0.32,
+        "ci_lower": -0.0,
+        "ci_upper": 0.09999999999999999,
+        "improvement": 0.039999999999999994,
+        "level": 0.95,
+        "metric": "redundant_reads",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.5,
+        "parent_mean": 0.36
+      },
+      "fork_rep_delta_variance": 0.09000000000000001,
+      "scratch": {
+        "child_mean": 0.38,
+        "ci_lower": -0.039999999999999994,
+        "ci_upper": 0.19999999999999998,
+        "improvement": 0.07999999999999999,
+        "level": 0.95,
+        "metric": "redundant_reads",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.3428814097873725,
+        "parent_mean": 0.45999999999999996
+      },
+      "scratch_rep_delta_variance": 0.6500000000000001,
+      "variance_ratio_scratch_over_fork": 7.222222222222223
+    },
+    "success": {
+      "agree_sign": true,
+      "agree_significance": true,
+      "fork": {
+        "child_mean": 0.6599999999999999,
+        "ci_lower": -0.1,
+        "ci_upper": 0.0,
+        "improvement": -0.04,
+        "level": 0.95,
+        "metric": "success",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.5,
+        "parent_mean": 0.7
+      },
+      "fork_rep_delta_variance": 0.39,
+      "scratch": {
+        "child_mean": 0.76,
+        "ci_lower": -0.16,
+        "ci_upper": 0.16000000000000003,
+        "improvement": 0.0,
+        "level": 0.95,
+        "metric": "success",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 1.0,
+        "parent_mean": 0.76
+      },
+      "scratch_rep_delta_variance": 0.36000000000000004,
+      "variance_ratio_scratch_over_fork": 0.9230769230769231
+    },
+    "tokens": {
+      "agree_sign": false,
+      "agree_significance": true,
+      "fork": {
+        "child_mean": 3548.94,
+        "ci_lower": -0.003695685698919303,
+        "ci_upper": 0.09258818438572779,
+        "improvement": 0.03804382036128704,
+        "level": 0.95,
+        "metric": "tokens",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.232421875,
+        "parent_mean": 3714.78
+      },
+      "fork_rep_delta_variance": 0.11931651195883623,
+      "scratch": {
+        "child_mean": 3341.3,
+        "ci_lower": -0.12115302334774347,
+        "ci_upper": 0.02795250749346636,
+        "improvement": -0.047061400529254796,
+        "level": 0.95,
+        "metric": "tokens",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.322265625,
+        "parent_mean": 3214.12
+      },
+      "scratch_rep_delta_variance": 0.21145546646336033,
+      "variance_ratio_scratch_over_fork": 1.7722229974030057
+    },
+    "tool_calls": {
+      "agree_sign": true,
+      "agree_significance": false,
+      "fork": {
+        "child_mean": 8.94,
+        "ci_lower": 0.012902435585132852,
+        "ci_upper": 0.09320050125313288,
+        "improvement": 0.04942210432219293,
+        "level": 0.95,
+        "metric": "tool_calls",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.0390625,
+        "parent_mean": 9.42
+      },
+      "fork_rep_delta_variance": 0.09286118209107458,
+      "scratch": {
+        "child_mean": 7.9799999999999995,
+        "ci_lower": -0.026683157889329005,
+        "ci_upper": 0.07402562708112696,
+        "improvement": 0.02099716486011818,
+        "level": 0.95,
+        "metric": "tool_calls",
+        "n_reps": 5,
+        "n_tasks": 10,
+        "p_adjusted": null,
+        "p_value": 0.6875,
+        "parent_mean": 8.2
+      },
+      "scratch_rep_delta_variance": 0.1621998097172695,
+      "variance_ratio_scratch_over_fork": 1.7466912014773872
+    }
+  },
+  "model_version": "synthetic-oracle-v1",
+  "n_tasks": 10,
+  "preregistration": "experiments/preregistered/20260915T084641Z-E2.json",
+  "reps": 5,
+  "wall_time_s": 191.3
+}
