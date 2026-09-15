@@ -48,6 +48,7 @@ from app.refinement.evaluation import (
     plan_comparison,
 )
 from app.refinement.gate import (
+    RELATIVE_METRICS,
     CandidateVerdict,
     compare_metric,
     judge_candidates,
@@ -107,10 +108,19 @@ class RefinementLoop:
         self.seed = seed
         self.n_resamples = n_resamples
 
+    def _protected(self) -> set[str]:
+        """Tasks whose outcomes decide promotion: never reflection input."""
+        return set(self.sets.holdout) | set(self.sets.regression)
+
     # ── observed work ────────────────────────────────────────────────
 
     async def run_task(self, project: ProjectRecord, task_id: str, *, seed: int) -> RunResult:
         """Run one real task under the active harness (observed work)."""
+        if task_id in self._protected():
+            raise ValueError(
+                f"{task_id} is in the {self.sets.which(task_id)} set; observed work may "
+                "only use trigger or spare tasks — holdout data must never reach reflection"
+            )
         arm = Arm("active", project.active_harness, project.memory_version)
         plan = plan_comparison(
             run_id=new_run_id("work"),  # "hx-work-…" == WORK_RUN_PREFIX + hex
@@ -142,6 +152,7 @@ class RefinementLoop:
         stats = await compute_stats(
             self.xp, harness_id=project.active_harness, agent=self.agent,
             last_reflection_at=last_at, tasks=self.tasks,
+            exclude_task_ids=self._protected(),
         )
         decision = should_reflect(
             stats, noise_floor_success=noise_floor.floor("success") if noise_floor else None
@@ -271,7 +282,9 @@ class RefinementLoop:
 
         pairs = await self.xp.evaluated_trajectories(harness_id=project.active_harness,
                                                      agent=self.agent)
-        pairs = [(t, e) for t, e in pairs if is_observed_work(t)][-limit:]
+        protected = self._protected()
+        pairs = [(t, e) for t, e in pairs
+                 if is_observed_work(t) and t.task_id not in protected][-limit:]
         views = []
         for t, e in pairs:
             views.append(TrajectoryView(trajectory=t, evaluation=e,
@@ -336,7 +349,11 @@ class RefinementLoop:
         task_ids = list(fork_points)[: self.config.budget.cheap_eval_tasks]
         method = "fork" if pattern.scope == "local" and self.runtime.adapter_factory().supports_fork else "scratch"
         if not task_ids:
-            task_ids = list(pattern.task_ids)[: self.config.budget.cheap_eval_tasks]
+            # No forkable checkpoints (e.g. wrap-mode observations, whose
+            # task ids are not corpus tasks): screen on corpus tasks only.
+            known = [t for t in pattern.task_ids
+                     if t in self.tasks and t not in self._protected()]
+            task_ids = (known or list(self.sets.trigger))[: self.config.budget.cheap_eval_tasks]
             method = "scratch"
         plan = plan_comparison(
             run_id=new_run_id("trigger"), arms=arms, task_ids=task_ids, reps=2,
@@ -447,12 +464,13 @@ class RefinementLoop:
         pm = compare_metric(results, "h0", "active", primary, n_resamples=self.n_resamples,
                             seed=self.seed)
         promotions = await self.xp.list_harness_events(project.id, kind="promote")
-        claimed = 0.0
-        for event in promotions:
-            try:
-                claimed += event.details["evaluation"]["metrics"][primary]["improvement"]
-            except (KeyError, TypeError):
-                pass
+        claimed = claimed_chain_improvement(
+            [
+                event.details.get("evaluation", {}).get("metrics", {}).get(primary, {}).get("improvement")
+                for event in promotions
+            ],
+            relative=primary in RELATIVE_METRICS,
+        )
         drifted = pm.ci_upper < claimed  # compounding: intermediate promotions were noise
         details = {"metric": pm.to_json(), "claimed_sum": claimed, "drifted": drifted}
         await self.xp.record_comparison(ComparisonRecord(
@@ -470,6 +488,18 @@ class RefinementLoop:
             details=details,
         ))
         return details
+
+
+def claimed_chain_improvement(improvements: list[float | None], *, relative: bool) -> float:
+    """What a chain of promotions claims in total. Relative reductions
+    compound (three 25% cuts are 57.8%, not 75%); absolute ones add."""
+    values = [v for v in improvements if isinstance(v, (int, float))]
+    if not relative:
+        return float(sum(values))
+    remaining = 1.0
+    for v in values:
+        remaining *= 1.0 - v
+    return 1.0 - remaining
 
 
 def _complexity(harness: HarnessRecord) -> float:

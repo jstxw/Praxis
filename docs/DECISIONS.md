@@ -164,3 +164,46 @@ audit and hygiene rules. `harness refine` therefore evaluates candidates on
 the pre-registered corpus task sets with the project's agent. Wrap-mode
 trajectories are also not forkable (no per-step workspace snapshots of a
 user repo); reflection on them still yields patterns and divergence steps.
+
+## D13 — Analysis revision after the v1 synthetic experiments
+
+The first (v1) synthetic E1/E2/E4/E5 runs computed every non-success metric
+as a *relative* per-task delta `(child − parent) / max(|parent|, 1e-9)`. For
+count metrics whose parent mean is zero on a task — injected context tokens
+under an empty H0, redundant reads, out-of-scope files, regressions — that
+divides by ~0; E4 v1 reported a context-token "improvement" of −1.37e11.
+
+**Revision (v2):** relative deltas only for `tool_calls` and `tokens` (never
+zero); absolute per-task deltas for success and all count metrics. The
+primary metric (`tool_calls`), and therefore every gate decision and the
+tool-call noise floor, is computed identically in v1 and v2.
+
+This changes an analysis definition after results were seen, which the
+pre-registration rule exists to prevent. It is handled the honest way: the
+v1 result files stay committed unchanged; the v2 experiments were
+**re-registered** (new timestamped files whose spec carries
+`analysis_revision`) and **re-run** from scratch, and v2 is what the docs
+report. `test_count_metrics_with_zero_parent_use_absolute_deltas` pins it.
+
+## D14 — Token counts from agents that report usage only at the end
+
+Claude Code reports token usage only in its final `result` event. A run cut
+off by the tool-call cap or the wall-clock budget terminates before that
+event and would record almost no tokens — so a candidate that makes the
+agent thrash to the cap would look *cheaper*. The recorder now marks such
+runs `tokens_complete=false`; the gate refuses to clear the cost check when
+any run in either arm has incomplete tokens.
+
+## Review fixes (2026-09-15, post-build)
+
+An independent read-only review of the branch found, and these commits fix:
+holdout/regression task data could reach reflection through observed work
+(now refused in `run_task` and filtered from policy stats and reflection
+views — `test_holdout_tasks_never_reach_reflection`); the drift check summed
+relative improvements that compound (`claimed_chain_improvement`); the
+trigger screen could fall back to non-corpus task ids and crash on wrap-mode
+projects; hooks ignored service mode, ran verification outside the project
+root, and set no timeout; the docker verifier ran as root and wrote
+bytecode into a bind mount (root-owned files on Linux); NUL bytes in step
+output broke Postgres inserts; ASCII-escaped JSON broke fork path rewriting
+under non-ASCII home directories; `status` printed an ungated drift delta.

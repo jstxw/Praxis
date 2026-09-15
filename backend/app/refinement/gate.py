@@ -9,9 +9,14 @@ Metric tiers:
 | quality    | diff size, out-of-scope files, regressions | "passed, wrecked the code" |
 | complexity | harness bytes, skills, injected tokens | penalty term |
 
-Every metric is reported as an **improvement** (positive = better):
-efficiency metrics as the relative reduction ``(parent − child)/parent``
-per task, success as the absolute per-task rate difference. Statistics
+Every metric is reported as an **improvement** (positive = better): tool
+calls and tokens as the relative reduction ``(parent − child)/parent`` per
+task (their parent means are never zero); success and the count metrics
+that are often zero on a task (redundant reads, diff size, out-of-scope
+files, regressions, injected context tokens) as absolute per-task
+differences — a relative delta over a zero parent mean is undefined (the v1
+experiments reported a context-token "improvement" of −1.37e11 before this
+was fixed; see docs/DECISIONS.md D13). Statistics
 are on per-task paired deltas: bootstrap CI (Bonferroni-widened for the
 number of candidates) and Wilcoxon signed-rank with Holm correction
 across candidates. Decisions use **CI lower bounds**, never point
@@ -58,6 +63,7 @@ from app.refinement.evaluation import (
 from app.refinement.stats import bonferroni_level, compare_paired, holm_bonferroni
 
 PRIMARY_METRICS = ("tool_calls", "tokens", "redundant_reads")
+RELATIVE_METRICS = frozenset({"tool_calls", "tokens"})
 QUALITY_METRICS = ("diff_size", "files_out_of_scope", "regressions")
 ALL_METRICS = PRIMARY_METRICS + ("success",) + QUALITY_METRICS + ("context_tokens",)
 
@@ -96,7 +102,7 @@ def compare_metric(
     if task_ids is not None:
         parent = {t: v for t, v in parent.items() if t in task_ids}
         child = {t: v for t, v in child.items() if t in task_ids}
-    relative = metric != "success"
+    relative = metric in RELATIVE_METRICS
     comparison = compare_paired(
         metric, parent, child, relative=relative, level=level,
         n_resamples=n_resamples, seed=seed,
@@ -213,6 +219,11 @@ def judge_candidates(
         audits = [a for a in (v.audit["holdout"], v.audit["regression"]) if a]
         if any(a["tests_modified"] or a["voided"] for a in audits):
             reasons.append("audit: tests modified or run voided")
+        parent_audit = arm_audit(holdout, parent_arm).to_json()
+        if any(a.get("tokens_incomplete") for a in audits + [parent_audit]):
+            # A run cut off before its agent reported usage looks cheap;
+            # cost cannot be assessed, so it cannot be cleared.
+            reasons.append("cost: token counts incomplete (runs terminated before usage report)")
         success = v.metrics["success"]
         if success.ci_lower < -floor_success:
             reasons.append(

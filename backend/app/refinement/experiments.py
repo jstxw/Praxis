@@ -46,6 +46,7 @@ from app.refinement.evaluation import (
 )
 from app.refinement.gate import (
     ALL_METRICS,
+    RELATIVE_METRICS,
     compare_metric,
     judge_candidates,
 )
@@ -152,6 +153,8 @@ def default_spec(experiment: str, ctx: ExperimentContext, **extra: Any) -> dict[
         "level": gate.level,
         "statistics": "per-task paired deltas; percentile bootstrap CI; Wilcoxon "
                       "signed-rank; Holm across simultaneous hypotheses",
+        "analysis_revision": "v2: relative deltas for tool_calls and tokens only; absolute "
+                             "for success and count metrics (v1 divided by zero parent means)",
         "seed": ctx.seed,
     }
     spec.update(extra)
@@ -439,7 +442,7 @@ def paired_rep_delta_variance(results: list[RunResult], parent: str, child: str,
         if len(reps) < 2:
             continue
         p_mean = mean([arms[parent][k] for k in reps])
-        scale = abs(p_mean) if metric != "success" and abs(p_mean) > 1e-9 else 1.0
+        scale = abs(p_mean) if metric in RELATIVE_METRICS and abs(p_mean) > 1e-9 else 1.0
         deltas = [(arms[child][k] - arms[parent][k]) / scale for k in reps]
         per_task[task_id] = variance(deltas)
     values = list(per_task.values())

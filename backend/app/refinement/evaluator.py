@@ -20,6 +20,7 @@ by name; its isolation label is written into every evaluation it makes.
 from __future__ import annotations
 
 import difflib
+import os
 import re
 import shutil
 import subprocess
@@ -158,9 +159,13 @@ class Verifier:
             pytest_args = pytest_args[1:]
         pytest_args += ["-p", "no:cacheprovider", f"--junitxml={_JUNIT}"]
         if self.isolation == "docker":
+            # Run as the host user and write no bytecode: a root container
+            # would leave root-owned files the harness cannot clean up (Linux).
             argv = [
                 "docker", "run", "--rm", "--network", "none", "--memory", "512m",
-                "--cpus", "1", "-v", f"{workspace.resolve()}:/workspace",
+                "--cpus", "1", "--user", f"{os.getuid()}:{os.getgid()}",
+                "-e", "PYTHONDONTWRITEBYTECODE=1",
+                "-v", f"{workspace.resolve()}:/workspace",
                 "-w", "/workspace", self.image, "python", "-m", "pytest", *pytest_args,
             ]
         else:

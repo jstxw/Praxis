@@ -510,6 +510,7 @@ class ArmAudit:
     tests_modified: int = 0
     timeouts: int = 0
     infra_errors: int = 0
+    tokens_incomplete: int = 0
     isolation: set[str] = field(default_factory=set)
     agents: set[str] = field(default_factory=set)
     model_versions: set[str] = field(default_factory=set)
@@ -519,6 +520,7 @@ class ArmAudit:
         return {
             "runs": self.runs, "voided": self.voided, "tests_modified": self.tests_modified,
             "timeouts": self.timeouts, "infra_errors": self.infra_errors,
+            "tokens_incomplete": self.tokens_incomplete,
             "isolation": sorted(self.isolation), "agents": sorted(self.agents),
             "model_versions": sorted(self.model_versions),
             "memory_versions": sorted(self.memory_versions),
@@ -535,6 +537,7 @@ def arm_audit(results: list[RunResult], arm: str) -> ArmAudit:
         audit.tests_modified += int(bool(r.evaluation.tests_modified))
         audit.timeouts += int(r.trajectory.result == "timeout")
         audit.infra_errors += int(r.trajectory.result == "infra_error")
+        audit.tokens_incomplete += int((r.trajectory.metadata or {}).get("tokens_complete") is False)
         audit.isolation.add(r.evaluation.isolation)
         audit.agents.add(r.trajectory.agent)
         audit.model_versions.add(r.trajectory.model_version)

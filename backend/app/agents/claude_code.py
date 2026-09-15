@@ -200,7 +200,8 @@ def fork_session(
             f"session {src_session_file.name} has {seen} tool results; cannot cut after "
             f"{cut_after_tool_results}"
         )
-    text = "\n".join(json.dumps(r) for r in kept)
+    # ensure_ascii=False: a non-ASCII workspace path must match literally.
+    text = "\n".join(json.dumps(r, ensure_ascii=False) for r in kept)
     text = text.replace(os.path.realpath(src_cwd), os.path.realpath(dst_cwd))
     if old_session_id:
         text = text.replace(old_session_id, new_session_id)
@@ -227,6 +228,7 @@ def usage_tokens(usage: dict[str, Any] | None) -> int:
 class ClaudeCodeAdapter:
     name = "claude"
     supports_fork = True
+    reports_usage_at_end = True  # usage arrives only in the final `result` event
 
     def __init__(
         self,

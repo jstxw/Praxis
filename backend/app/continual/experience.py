@@ -713,7 +713,7 @@ class ExperienceStore:
                         s.kind,
                         s.tool,
                         _dumps(s.input),
-                        s.output,
+                        s.output.replace("\x00", ""),  # Postgres TEXT rejects NUL
                         int(s.is_error),
                         s.tokens,
                         s.snapshot_id,

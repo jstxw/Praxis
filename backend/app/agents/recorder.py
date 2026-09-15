@@ -120,12 +120,13 @@ async def record_run(
 
     status, error = "completed", None
     model_version = "unknown"
+    saw_usage = False
     limit = harness.snapshot.control.max_tool_calls
 
     await adapter.start_task(task, workspace, harness, resume=resume, seed=seed)
 
     async def consume() -> None:
-        nonlocal step, tool_calls, tokens, status, error, model_version
+        nonlocal step, tool_calls, tokens, status, error, model_version, saw_usage
         async for event in adapter.stream_events():
             if event.model_version:
                 model_version = event.model_version
@@ -137,6 +138,7 @@ async def record_run(
                 status, error = "timeout", f"agent budget exhausted ({event.output})"
                 return
             if event.kind == "usage":
+                saw_usage = True
                 tokens += event.tokens
                 continue
             if event.kind != "tool_call":
@@ -191,4 +193,9 @@ async def record_run(
         fork_step=resume.step if resume else None,
         error=error,
         wall_time_s=round(time.monotonic() - started, 3),
+        # Adapters that report usage only at the end (Claude Code's final
+        # `result` event) have no token count for a run cut off early.
+        metadata={
+            "tokens_complete": saw_usage or not getattr(adapter, "reports_usage_at_end", False)
+        },
     )

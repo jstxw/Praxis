@@ -261,7 +261,8 @@ async def status_text(stores: Stores, root: Path) -> str:
         lines.append("Last promotion: none (no candidate has cleared the gate)")
     drift = [e for e in events if e.kind == "drift_check"]
     if drift:
-        lines.append(f"Drift check vs H0: {drift[-1].summary}")
+        verdict = "DRIFT DETECTED" if drift[-1].details.get("drifted") else "no drift detected"
+        lines.append(f"Drift check vs H0: {verdict} (report only; not a gate-cleared delta)")
     rejects = [e for e in events if e.kind == "reject"]
     if rejects:
         lines.append(f"Rejected cycles: {len(rejects)} (latest: {rejects[-1].summary})")
@@ -321,7 +322,11 @@ def run(
             result = await loop.run_task(project, task, seed=seed)
             return result
 
-    result = _run(go())
+    try:
+        result = _run(go())
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
     ev = result.evaluation
     typer.echo(json.dumps({
         "task": task, "result": result.trajectory.result, "success": ev.success,
@@ -470,15 +475,16 @@ def tasks_sets(seed: int = typer.Option(20260915)) -> None:
 
 
 def hook_settings(harness_cmd: str) -> dict[str, Any]:
-    def entry(event: str) -> list[dict[str, Any]]:
-        return [{"hooks": [{"type": "command", "command": f"{harness_cmd} hook {event}"}]}]
+    def entry(event: str, timeout: int = 60) -> list[dict[str, Any]]:
+        return [{"hooks": [{"type": "command", "command": f"{harness_cmd} hook {event}",
+                            "timeout": timeout}]}]
 
     return {
         "hooks": {
             "UserPromptSubmit": entry("prompt"),
             "PostToolUse": [{"matcher": "", "hooks": [
                 {"type": "command", "command": f"{harness_cmd} hook tool"}]}],
-            "Stop": entry("stop"),
+            "Stop": entry("stop", timeout=900),  # runs the project's verification
         }
     }
 
@@ -544,8 +550,13 @@ async def handle_hook(event: str, payload: dict[str, Any]) -> str:
     state_file.parent.mkdir(parents=True, exist_ok=True)
     session = json.loads(state_file.read_text()) if state_file.exists() else {}
 
-    async with open_stores() as stores:
-        project = await stores.xp.get_project(root=str(find_project_root(cwd)))
+    root = find_project_root(cwd)
+    project_file = root / PROJECT_FILE
+    service = (
+        project_file.exists() and json.loads(project_file.read_text()).get("mode") == "service"
+    )
+    async with open_stores(service=service) as stores:
+        project = await stores.xp.get_project(root=str(root))
         if project is None:
             return ""
         if event == "prompt":
@@ -582,7 +593,8 @@ async def handle_hook(event: str, payload: dict[str, Any]) -> str:
             success, output = None, ""
             if test_command:
                 try:
-                    proc = subprocess.run(test_command, shell=True, cwd=cwd, capture_output=True,
+                    proc = subprocess.run(test_command, shell=True, cwd=project.root,
+                                          capture_output=True,
                                           text=True, timeout=600)
                     success, output = proc.returncode == 0, (proc.stdout + proc.stderr)[-2000:]
                 except subprocess.TimeoutExpired:

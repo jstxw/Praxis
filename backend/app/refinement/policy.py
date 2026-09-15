@@ -82,13 +82,17 @@ async def compute_stats(
     last_reflection_at: float | None,
     tasks: dict[str, Any] | None = None,
     window: int = RECENT_WINDOW,
+    exclude_task_ids: set[str] | None = None,
 ) -> HarnessStats:
     """Stats over *primary* task trajectories (forks and evaluation runs
-    are excluded: they are experiments, not observed work)."""
+    are excluded: they are experiments, not observed work). Holdout and
+    regression tasks are excluded by the caller: their data must never
+    reach reflection."""
+    excluded = exclude_task_ids or set()
     rows: list[tuple[TrajectoryRecord, EvaluationRecord]] = [
         (t, e)
         for t, e in await xp.evaluated_trajectories(harness_id=harness_id, agent=agent)
-        if is_observed_work(t)
+        if is_observed_work(t) and t.task_id not in excluded
     ]
     since = [
         (t, e) for t, e in rows
