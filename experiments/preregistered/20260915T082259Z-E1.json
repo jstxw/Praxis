@@ -1,0 +1,68 @@
+{
+  "experiment": "E1",
+  "registered_at": "20260915T082259Z",
+  "sha256": "d0f3915b8061e4c61812d6764bdd6b6d0120524b6c14a4790adefd9962efdeda",
+  "spec": {
+    "agent": "synthetic",
+    "alpha": 0.05,
+    "experiment": "E1",
+    "kill_criterion": "noise floor on the primary metric > plausible_effect",
+    "level": 0.95,
+    "method": "scratch",
+    "metrics": [
+      "tool_calls",
+      "tokens",
+      "redundant_reads",
+      "success",
+      "diff_size",
+      "files_out_of_scope",
+      "regressions",
+      "context_tokens"
+    ],
+    "model_version": "synthetic-oracle-v1",
+    "noise_floor": "per metric max(|CI lower|, |CI upper|) of the null comparison",
+    "null_test": "H vs H: every metric CI contains 0 and no Holm-adjusted p <= alpha",
+    "primary_metric": "tool_calls",
+    "reps": 5,
+    "sabotage_test": "H vs sabotage: success improvement CI upper < 0",
+    "seed": 20260915,
+    "statistics": "per-task paired deltas; percentile bootstrap CI; Wilcoxon signed-rank; Holm across simultaneous hypotheses",
+    "task_sets": {
+      "holdout": [
+        "task-002-add-function",
+        "task-004-handle-error",
+        "task-007-implement-stack",
+        "task-008-fix-pagination-off-by-one",
+        "task-009-fix-cart-aliasing",
+        "task-014-add-top-words",
+        "task-015-refactor-shipping-constants",
+        "task-017-refactor-to-dataclass",
+        "task-021-handle-retry",
+        "task-025-implement-semver-ordering"
+      ],
+      "regression": [
+        "task-005-implement-spec",
+        "task-010-fix-unicode-slugify",
+        "task-012-add-merge-intervals",
+        "task-016-refactor-dispatch-table",
+        "task-024-implement-roman-numerals"
+      ],
+      "seed": 20260915,
+      "spare": [
+        "task-006-fix-recursion",
+        "task-011-add-chunked",
+        "task-018-refactor-log-pipeline",
+        "task-022-handle-jsonl-records",
+        "task-023-implement-lru-cache"
+      ],
+      "trigger": [
+        "task-001-fix-typo",
+        "task-003-refactor",
+        "task-013-add-allocate-cents",
+        "task-019-handle-config-errors",
+        "task-020-handle-safe-divide"
+      ]
+    },
+    "tasks": "trigger+holdout+regression (20)"
+  }
+}

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import random
 import shutil
 import tempfile
@@ -32,6 +33,12 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 CORPUS_DIR = REPO_ROOT / "eval" / "corpus"
 PREREGISTRATION_DIR = REPO_ROOT / "experiments" / "preregistered"
 SET_NAMES = ("trigger", "holdout", "regression")
+
+
+def preregistration_dir() -> Path:
+    """``$HARNESS_PREREG_DIR`` or ``experiments/preregistered`` (read at call time)."""
+    override = os.environ.get("HARNESS_PREREG_DIR")
+    return Path(override) if override else PREREGISTRATION_DIR
 
 
 def load_task(task_dir: Path) -> TaskSpec:
@@ -241,10 +248,11 @@ def preregister(
     experiment: str,
     spec: dict[str, Any],
     *,
-    directory: Path = PREREGISTRATION_DIR,
+    directory: Path | None = None,
     now: datetime | None = None,
 ) -> Path:
     """Write a timestamped, hashed pre-registration. Never overwrites."""
+    directory = directory or preregistration_dir()
     directory.mkdir(parents=True, exist_ok=True)
     stamp = (now or datetime.now(timezone.utc)).strftime("%Y%m%dT%H%M%SZ")
     path = directory / f"{stamp}-{experiment}.json"
@@ -270,7 +278,8 @@ def load_preregistration(path: Path) -> dict[str, Any]:
     return document
 
 
-def latest_preregistration(experiment: str, directory: Path = PREREGISTRATION_DIR) -> Path | None:
+def latest_preregistration(experiment: str, directory: Path | None = None) -> Path | None:
+    directory = directory or preregistration_dir()
     if not directory.exists():
         return None
     matches = sorted(directory.glob(f"*-{experiment}.json"))

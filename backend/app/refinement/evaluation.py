@@ -126,6 +126,20 @@ class RunResult:
     evaluation: EvaluationRecord
 
 
+def nearest_resumable_step(steps: list[Any], step: int) -> int | None:
+    """Latest checkpoint at or before ``step`` an adapter can resume from.
+
+    Not every step is a fork point: a step inside a batch of parallel tool
+    calls has no resume state (resuming there would hand the model half a
+    batch of results).
+    """
+    candidates = [
+        s.step for s in steps
+        if s.step <= step and s.snapshot_id and s.agent_state is not None
+    ]
+    return max(candidates) if candidates else None
+
+
 def derive_seed(*parts: Any) -> int:
     digest = hashlib.sha256(":".join(str(p) for p in parts).encode()).hexdigest()
     return int(digest[:12], 16)

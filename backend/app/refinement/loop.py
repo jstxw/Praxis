@@ -43,6 +43,7 @@ from app.refinement.evaluation import (
     Arm,
     EvaluationRuntime,
     RunResult,
+    nearest_resumable_step,
     new_run_id,
     plan_comparison,
 )
@@ -327,8 +328,11 @@ class RefinementLoop:
         fork_points: dict[str, tuple[str, int]] = {}
         for trajectory_id, step in pattern.fork_points():
             trajectory = await self.xp.get_trajectory(trajectory_id)
-            if trajectory and trajectory.task_id not in fork_points and trajectory.task_id in self.tasks:
-                fork_points[trajectory.task_id] = (trajectory_id, step)
+            if not trajectory or trajectory.task_id in fork_points or trajectory.task_id not in self.tasks:
+                continue
+            resumable = nearest_resumable_step(await self.xp.full_steps(trajectory_id), step)
+            if resumable is not None:
+                fork_points[trajectory.task_id] = (trajectory_id, resumable)
         task_ids = list(fork_points)[: self.config.budget.cheap_eval_tasks]
         method = "fork" if pattern.scope == "local" and self.runtime.adapter_factory().supports_fork else "scratch"
         if not task_ids:

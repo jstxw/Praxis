@@ -132,6 +132,10 @@ async def record_run(
             if event.kind == "error":
                 status, error = "infra_error", event.output
                 return
+            if event.kind == "budget_exhausted":
+                # A spend/turn cap is a timeout, not an infrastructure failure.
+                status, error = "timeout", f"agent budget exhausted ({event.output})"
+                return
             if event.kind == "usage":
                 tokens += event.tokens
                 continue

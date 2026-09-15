@@ -33,6 +33,7 @@ asyncio_default_fixture_loop_scope = "function"
 [project.scripts]
 meta-harness = "app.cli:main"
 meta-harness-mcp = "app.mcp_server:main"
+harness = "app.harness_cli:main"
 
 [build-system]
 requires = ["hatchling"]
